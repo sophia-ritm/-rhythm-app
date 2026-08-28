@@ -1068,10 +1068,9 @@ initApp();
 
   document.getElementById('login-btn').addEventListener('click', async () => {
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'custom:yandex', // настроенный OIDC (Яндекс)
+      provider: 'custom', // настроенный OIDC (Яндекс)
       options: {
-        // URL вашей страницы (где лежит этот index.html), а НЕ callback Supabase
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo: 'https://sophia-ritm.github.io/-rhythm-app/'
       }
     });
     if (error) console.error('Ошибка входа:', error.message);
