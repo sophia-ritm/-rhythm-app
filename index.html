@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink:#0F1419;
@@ -201,6 +202,8 @@
 </head>
 <body>
 <div class="wrap">
+
+  <button id="login-btn" style="background: #FFCC00; color: black; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 15px 0; display: block; width: 100%; box-sizing: border-box;">Войти через Яндекс ID</button>
 
   <div class="hero">
     <p class="user-name" id="userName">Ритм</p>
@@ -1053,6 +1056,34 @@ async function initApp(){
 }
 
 initApp();
+</script>
+
+<script>
+  // Supabase + Яндекс ID
+  const supabaseUrl = 'https://nvxihgaptbwhzfmcndob.supabase.co';
+  const supabaseKey = 'sb_publishable_tSYMxN8fyPuWuOH940RRjA_bk_KuHDS';
+
+  const { createClient } = supabase;
+  const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'yandex',
+      options: {
+        // URL вашей страницы (где лежит этот index.html), а НЕ callback Supabase
+        redirectTo: window.location.origin + window.location.pathname
+      }
+    });
+    if (error) console.error('Ошибка входа:', error.message);
+  });
+
+  async function checkUser() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      document.getElementById('login-btn').innerText = `Привет, ${user.user_metadata?.name || user.user_metadata?.full_name || 'Атлет'}!`;
+    }
+  }
+  checkUser();
 </script>
 </body>
 </html>
