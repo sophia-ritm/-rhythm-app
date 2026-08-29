@@ -427,10 +427,10 @@
   }
 
   function getClient(){
-    if (window.supabase) return window.supabase;
+    if (window.supabaseClient) return window.supabaseClient;
     if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        return window.supabase;
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return window.supabaseClient;
     }
     return null;
 }
@@ -611,13 +611,11 @@ window.addEventListener('unhandledrejection', function(e){
 
 const SUPABASE_URL = 'https://nvxihgaptbwhzfmcndob.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_tSYMxN8fyPuWuOH940RRjA_bk_KuHDS';
-window.supabase = null;
+let supabase = null; // вернули локальную переменную, чтобы не ломать библиотеку
 let supabaseConfigError = null;
 try{
-  if(!SUPABASE_URL || SUPABASE_URL.includes('ВСТАВЬ')){
-    throw new Error('Не указан URL проекта Supabase');
-  }
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabase; // ПУБЛИКУЕМ КЛИЕНТ ДЛЯ ПЕРВОГО СКРИПТА
 }catch(e){
   supabaseConfigError = e.message;
   console.error('Supabase init error:', e);
