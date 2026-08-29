@@ -427,18 +427,13 @@
   }
 
   function getClient(){
-    // Предпочитаем общий клиент основного приложения (переменная `supabase`
-    // из второго <script> ниже) — тогда его onAuthStateChange узнает о входе
-    // сразу же, без перезагрузки страницы. Создаём свой клиент только как
-    // запасной вариант, если основной скрипт ещё не успел выполниться.
-    try{
-      if(typeof supabase !== 'undefined' && supabase) return supabase;
-    }catch(_e){}
-    if(!window.__rhythmSupabaseClient && window.supabase && typeof window.supabase.createClient === 'function'){
-      window.__rhythmSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (window.supabase) return window.supabase;
+    if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return window.supabase;
     }
-    return window.__rhythmSupabaseClient || null;
-  }
+    return null;
+}
 
   ready(function(){
     const sendBtn = document.getElementById('authSendLink');
@@ -616,7 +611,7 @@ window.addEventListener('unhandledrejection', function(e){
 
 const SUPABASE_URL = 'https://nvxihgaptbwhzfmcndob.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_tSYMxN8fyPuWuOH940RRjA_bk_KuHDS';
-let supabase = null;
+window.supabase = null;
 let supabaseConfigError = null;
 try{
   if(!SUPABASE_URL || SUPABASE_URL.includes('ВСТАВЬ')){
