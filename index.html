@@ -543,8 +543,8 @@
       const client = getClient();
       if(!client){
         msg.classList.add('err');
-        msg.textContent = 'Не удалось подключить авторизацию. Обновите страницу.';
-        return;
+msg.textContent = 'Не удалось подключить авторизацию. Обновите страницу.';
+return;
       }
 
       const oldText = verifyBtn.textContent;
@@ -553,25 +553,26 @@
       verifyBtn.style.opacity = '0.65';
 
       try{
-        const { error } = await client.auth.verifyOtp({
-          email: pendingEmail,
-          token: code,
-          type: 'email'
-        });
-        if(error) throw error;
-        // Успех: onAuthStateChange в основном скрипте сам переключит экран
-        // на личный кабинет — никакого письма-ссылки и перезагрузки не требуется.
-        msg.textContent = '';
-      }catch(err){
-        console.error('OTP verify error:', err);
-        msg.classList.add('err');
-        msg.textContent = 'Неверный или устаревший код: ' + (err && err.message ? err.message : String(err));
-      }finally{
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = oldText;
-        verifyBtn.style.opacity = '';
-      }
-    }, {capture:true});
+    const { error } = await client.auth.verifyOtp({
+        email: pendingEmail,
+        token: code,
+        type: 'email'
+    });
+    
+    if(error) throw error;
+    
+    // Сюда! Страница обновится ТОЛЬКО если код правильный и сервер принял его
+    window.location.reload(); 
+    
+}catch(err){
+    console.error('OTP verify error:', err);
+    msg.classList.add('err');
+    msg.textContent = 'Неверный или устаревший код: ' + (err && err.message ? err.message : String(err));
+}finally{
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = oldText;
+    verifyBtn.style.opacity = '';
+}
 
     if(backLink){
       backLink.addEventListener('click', function(e){
