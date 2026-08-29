@@ -261,14 +261,10 @@
 
   <div class="auth-box" id="authBox">
     <div id="authLoggedOut">
-      <p class="auth-hint">Войдите или зарегистрируйтесь по почте</p>
-      <div class="auth-col">
-        <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
-        <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
-      </div>
+      <p class="auth-hint">Войдите по почте, чтобы синхронизировать данные</p>
       <div class="auth-row">
-        <button class="auth-btn" id="authLogin">Войти</button>
-        <button class="auth-btn secondary" id="authSignup">Зарегистрироваться</button>
+        <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
+        <button class="auth-btn" id="authSendLink">Получить ссылку</button>
       </div>
       <p class="auth-msg" id="authMsg"></p>
     </div>
@@ -752,8 +748,7 @@ async function initAuth(){
   if(typeof window.supabase === 'undefined'){
     msg.classList.add('err');
     msg.textContent = 'Не удалось загрузить библиотеку Supabase (проблема с интернетом или блокировщиком). Обновите страницу.';
-    document.getElementById('authLogin').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Библиотека Supabase не загружена — обновите страницу.'; });
-    document.getElementById('authSignup').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Библиотека Supabase не загружена — обновите страницу.'; });
+    document.getElementById('authSendLink').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Библиотека Supabase не загружена — обновите страницу.'; });
     document.getElementById('authLogout').addEventListener('click', ()=>{});
     load();
     return;
@@ -762,46 +757,46 @@ async function initAuth(){
   if(!supabase){
     msg.classList.add('err');
     msg.textContent = 'Приложение не настроено: ' + supabaseConfigError + '. Проверьте SUPABASE_URL в коде.';
-    document.getElementById('authLogin').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Сначала укажите SUPABASE_URL в коде страницы.'; });
-    document.getElementById('authSignup').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Сначала укажите SUPABASE_URL в коде страницы.'; });
+    document.getElementById('authSendLink').addEventListener('click', ()=>{ msg.classList.add('err'); msg.textContent = 'Сначала укажите SUPABASE_URL в коде страницы.'; });
     document.getElementById('authLogout').addEventListener('click', ()=>{});
     load();
     return;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  handleSession(session);
-
-  supabase.auth.onAuthStateChange((_event, session) => handleSession(session));
-
-  document.getElementById('authLogin').addEventListener('click', async ()=>{
+  // Кнопки подключаем СРАЗУ, до любых запросов к Supabase — так они работают,
+  // даже если проверка текущей сессии ниже упадёт с ошибкой.
+  document.getElementById('authSendLink').addEventListener('click', async ()=>{
     msg.classList.remove('err');
     const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    if(!email || !password){ msg.textContent = 'Введите email и пароль'; return; }
-    msg.textContent = 'Входим…';
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error){ msg.classList.add('err'); msg.textContent = 'Ошибка: ' + error.message; }
-    else{ msg.textContent = ''; }
-  });
-
-  document.getElementById('authSignup').addEventListener('click', async ()=>{
-    msg.classList.remove('err');
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    if(!email || !password){ msg.textContent = 'Введите email и пароль'; return; }
-    if(password.length < 6){ msg.textContent = 'Пароль должен быть от 6 символов'; return; }
-    msg.textContent = 'Регистрируем…';
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if(error){ msg.classList.add('err'); msg.textContent = 'Ошибка: ' + error.message; return; }
-    msg.textContent = data.session
-      ? 'Готово, вы вошли'
-      : 'Проверьте почту и подтвердите регистрацию по ссылке';
+    if(!email){ msg.textContent = 'Введите email'; return; }
+    msg.textContent = 'Отправляем ссылку…';
+    try{
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      });
+      if(error){ msg.classList.add('err'); msg.textContent = 'Ошибка: ' + error.message; }
+      else{ msg.textContent = 'Проверьте почту и перейдите по ссылке для входа'; }
+    }catch(e){
+      msg.classList.add('err');
+      msg.textContent = 'Не удалось отправить: ' + e.message;
+    }
   });
 
   document.getElementById('authLogout').addEventListener('click', async ()=>{
-    await supabase.auth.signOut();
+    try{ await supabase.auth.signOut(); }catch(e){ console.warn('signOut error', e); }
   });
+
+  try{
+    const { data: { session } } = await supabase.auth.getSession();
+    handleSession(session);
+    supabase.auth.onAuthStateChange((_event, session) => handleSession(session));
+  }catch(e){
+    console.error('getSession error', e);
+    msg.classList.add('err');
+    msg.textContent = 'Не удалось проверить сессию: ' + e.message;
+    load();
+  }
 }
 
 // Пульс-линия по активности за текущую неделю (Пн–Вс)
