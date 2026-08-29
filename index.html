@@ -492,15 +492,21 @@
     sendBtn.addEventListener('click', async function(e){
       e.preventDefault();
       e.stopPropagation();
+const inputEl = document.getElementById('emailInput') || (typeof emailInput !== 'undefined' ? emailInput : null);
+const msgEl = document.getElementById('authMsg') || (typeof msg !== 'undefined' ? msg : null);
 
-      const email = emailInput.value.trim();
-      msg.classList.remove('err');
-      msg.textContent = '';
+if (!inputEl) {
+    alert("Критическая ошибка: Поле ввода email не найдено на странице!");
+    return;
+}
+      const email = inputEl.value.trim();
+      msgEl.classList.remove('err');
+msgEl.textContent = '';
 
-      if(!email){ msg.textContent = 'Введите email'; emailInput.focus(); return; }
+      if(!email){ msgEl.textContent = 'Введите email'; inputEl.focus(); return; }
       if(!/^\S+@\S+\.\S+$/.test(email)){
-        msg.classList.add('err');
-        msg.textContent = 'Проверьте адрес email';
+        msgEl.classList.add('err');
+        msgEl.textContent = 'Проверьте адрес email';
         emailInput.focus();
         return;
       }
