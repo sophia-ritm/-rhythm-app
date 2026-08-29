@@ -65,8 +65,9 @@
   .pulse-path{ fill:none; stroke:var(--pulse); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; filter: drop-shadow(0 0 6px rgba(232,74,154,0.5)); }
   .auth-box{ margin:16px 0 8px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
   .auth-hint{ font-size:12px; color:var(--muted); margin:0 0 10px; }
+  .auth-col{ display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
   .auth-row{ display:flex; gap:8px; }
-  .auth-row input{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+  .auth-row input, .auth-col input{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
     background:var(--surface-2); color:var(--chalk); font-size:14px; font-family:'Inter',sans-serif; }
   .auth-btn{ flex:1; padding:10px 14px; border-radius:10px; border:none; background:var(--pulse); color:#0A1220;
     font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
@@ -409,14 +410,6 @@ window.addEventListener('error', function(e){
   if(msg && !msg.textContent){
     msg.classList.add('err');
     msg.textContent = 'Ошибка на странице: ' + (e.message || 'см. консоль браузера');
-  }
-});
-window.addEventListener('unhandledrejection', function(e){
-  console.error('Необработанный отказ промиса:', e.reason);
-  const msg = document.getElementById('authMsg');
-  if(msg && !msg.textContent){
-    msg.classList.add('err');
-    msg.textContent = 'Ошибка: ' + (e.reason && e.reason.message ? e.reason.message : 'см. консоль браузера');
   }
 });
 
