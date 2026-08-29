@@ -581,17 +581,17 @@ return;
       });
     }
 
-    codeInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter') verifyBtn.click();
+codeInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter') verifyBtn.click();
     });
+
     emailInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter') sendBtn.click();
+        if(e.key === 'Enter') sendBtn.click();
     });
+
     });
 })();
 </script>
-
-<script>
 // ——— Supabase ———
 window.addEventListener('error', function(e){
   console.error('Необработанная ошибка:', e.error || e.message);
