@@ -37,13 +37,34 @@
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
   }
-  .wrap{ max-width:480px; margin:0 auto; padding:20px 18px 60px; }
+  .wrap{ max-width:480px; margin:0 auto; padding:max(20px, env(safe-area-inset-top)) 18px 60px; }
 
   .hero{ padding:12px 0 8px; position:relative; }
+  .brand-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .brand-logo{
+    width:36px; height:36px; border-radius:10px;
+    object-fit:cover; display:block;
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .brand-title{
+    font-family:'Oswald',sans-serif;
+    font-size:22px; font-weight:700;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:var(--chalk);
+    margin:0;
+    line-height:1;
+    transform: scaleX(0.85);
+    transform-origin: right center;
+  }
   .eyebrow{ font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin:0 0 4px; font-weight:600; }
   .user-name{ font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:var(--pulse); margin:0 0 2px; font-weight:700; }
   .pulse-svg{width:100%; height:28px; display:block; margin:4px 0 12px;}
   .pulse-path{ fill:none; stroke:var(--pulse); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; filter: drop-shadow(0 0 6px rgba(232,74,154,0.5)); }
+  #yandex-auth-container{ margin: 16px 0 8px; display:flex; justify-content:center; }
 
   .quote-box{
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
@@ -210,19 +231,22 @@
 <body>
 <div class="wrap">
 
-  <div id="yandex-auth-container" style="margin: 15px 0;"></div>
-  <div id="yandex-user-greeting" style="display:none; margin: 10px 0; font-size: 14px; color: var(--pulse); font-weight: 600;"></div>
-
   <div class="hero">
+    <div class="brand-row">
+      <img class="brand-logo" src="icon-192.png" alt="Ритм" width="36" height="36">
+      <p class="brand-title">Ритм</p>
+    </div>
     <p class="user-name" id="userName">Ритм</p>
     <p class="eyebrow" id="dateToday">—</p>
-    <svg class="pulse-svg" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="pulse-path" id="pulseLine" d="M0,14 L40,14 L52,4 L64,24 L76,14 L120,14 L132,6 L144,22 L156,14 L200,14 L212,4 L224,24 L236,14 L300,14"/></svg>
+    <svg class="pulse-svg" viewBox="0 0 300 28" preserveAspectRatio="none"><path class="pulse-path" id="pulseLine" d="M0,14 L300,14"/></svg>
   </div>
 
   <div class="quote-box">
     <p class="quote-text" id="quoteText">«Дисциплина — это мост между целями и результатами.»</p>
     <p class="quote-author" id="quoteAuthor">— Джим Рон</p>
   </div>
+
+  <div id="yandex-auth-container"></div>
 
   <div class="level-hero">
     <div class="level-badge">
@@ -685,6 +709,45 @@ function showVKUser(){
   el.textContent = name;
 }
 
+function showYandexUser(user){
+  const el = document.getElementById('userName');
+  if(!user){ return; }
+  const name = user.display_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || user.real_name || 'Атлет';
+  el.textContent = name;
+  const box = document.getElementById('yandex-auth-container');
+  if(box) box.style.display = 'none';
+}
+
+// Пульс-линия по активности за текущую неделю (Пн–Вс)
+function updatePulseLine(){
+  const start = startOfWeek(new Date());
+  const vals = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const ds = fmtDate(d);
+    const dayEntries = entriesOnDate(ds);
+    const score = dayEntries.reduce((s,e)=> s + (e.duration||20), 0); // минуты как «сила» удара
+    vals.push(score);
+  }
+  const max = Math.max(30, ...vals); // минимум шкалы, чтобы не сплющивать
+  const w = 300, h = 28, mid = 14;
+  const step = w / 6;
+  let d = `M0,${mid}`;
+  for(let i=0;i<7;i++){
+    const x = i * step;
+    const intensity = vals[i] / max; // 0..1
+    if(vals[i] > 0){
+      const amp = 4 + intensity * 10; // высота зубца
+      d += ` L${x-6},${mid} L${x-3},${mid-amp} L${x},${mid+amp*0.7} L${x+3},${mid-amp*0.5} L${x+6},${mid}`;
+    } else {
+      d += ` L${x},${mid}`;
+    }
+  }
+  d += ` L${w},${mid}`;
+  const path = document.getElementById('pulseLine');
+  if(path) path.setAttribute('d', d);
+}
+
 function entriesOnDate(dateStr){ return entries.filter(e => e.date === dateStr); }
 
 function weekCount(weekStartDate){
@@ -740,6 +803,8 @@ function renderHero(){
   const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
   document.getElementById('quoteText').textContent = q.text;
   document.getElementById('quoteAuthor').textContent = q.author;
+
+  updatePulseLine();
 
   const points = computePoints();
   const level = getLevel(points);
@@ -1110,16 +1175,6 @@ initApp();
       }
     } catch (e) {}
   })();
-
-  function showYandexUser(user) {
-    const greet = document.getElementById('yandex-user-greeting');
-    const name = user.display_name || user.first_name || user.real_name || 'Атлет';
-    greet.textContent = 'Привет, ' + name + '!';
-    greet.style.display = 'block';
-    // Прячем контейнер кнопки после успешного входа
-    const box = document.getElementById('yandex-auth-container');
-    if (box) box.style.display = 'none';
-  }
 
   window.onload = function () {
     if (typeof YaAuthSuggest === 'undefined') {
