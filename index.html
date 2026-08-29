@@ -612,14 +612,13 @@ window.addEventListener('unhandledrejection', function(e){
 
 const SUPABASE_URL = 'https://nvxihgaptbwhzfmcndob.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_tSYMxN8fyPuWuOH940RRjA_bk_KuHDS';
-let supabase = null; // вернули локальную переменную, чтобы не ломать библиотеку
+let supabase = null;
 let supabaseConfigError = null;
-try{
+try {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabaseClient = supabase; // ПУБЛИКУЕМ КЛИЕНТ ДЛЯ ПЕРВОГО СКРИПТА
-}catch(e){
-  supabaseConfigError = e.message;
-  console.error('Supabase init error:', e);
+    window.supabaseClient = supabase;
+} catch(e) {
+    console.error(e);
 }
 
 let entries = [];
